@@ -1,86 +1,107 @@
 async function init() {
 try {
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbwyTXs8jhGfi8eD1NhQsww43JZKD-N8IcJMgYx3lhKAjVfHCueWMNKtsRmqoe8PJStQaA/exec';
+    // DOM ELEMENTS (important)
+    const todaySection = document.getElementById("todaySection");
+    const upcomingSection = document.getElementById("upcomingSection");
+    const pastSection = document.getElementById("pastSection");
 
-const resp = await fetch(API_URL);
-if(!resp.ok) throw new Error('Network response not ok: ' + resp.status);
-const json = await resp.json();
+    const todayCount = document.getElementById("todayCount");
+    const upcomingCount = document.getElementById("upcomingCount");
+    const pastCount = document.getElementById("pastCount");
 
-const refDate = new Date();
+    const loading = document.getElementById("loading");
+    const content = document.getElementById("content");
+    const errorBox = document.getElementById("error");
 
-const today = (json.today||[]).map(p=>({...p, BirthdayRaw: p.BirthdayRaw || p.Birthday || ''}));
-const upcoming = (json.upcoming||[]).map(p=>({...p, BirthdayRaw: p.BirthdayRaw || p.Birthday || ''}));
-const past = (json.past||[]).map(p=>({...p, BirthdayRaw: p.BirthdayRaw || p.Birthday || ''}));
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwyTXs8jhGfi8eD1NhQsww43JZKD-N8IcJMgYx3lhKAjVfHCueWMNKtsRmqoe8PJStQaA/exec';
 
-todaySection.innerHTML = '';
-upcomingSection.innerHTML = '';
-pastSection.innerHTML = '';
+    // FETCH API
+    const resp = await fetch(API_URL);
+    if (!resp.ok) throw new Error('Network response not ok: ' + resp.status);
 
-if(!today || today.length===0){
-    todaySection.innerHTML = `<div class="col-span-full p-8 bg-white rounded-2xl shadow-md text-center">No birthdays today 🕊️</div>`;
-} else {
-    today.forEach(p=> todaySection.appendChild(makeCard(p, refDate)));
-    setTimeout(()=>{ if(window.confetti) confetti({particleCount:150, spread:70}); },400);
-}
+    const json = await resp.json();
+    console.log("API DATA:", json);  // Debug
 
-if(!upcoming || upcoming.length===0){
-    upcomingSection.innerHTML = `<div class="col-span-full p-6 bg-white rounded-2xl shadow-md text-center">No upcoming birthdays found</div>`;
-} else { upcoming.forEach(p=> upcomingSection.appendChild(makeCard(p, refDate))); }
+    const refDate = new Date();
 
-if(!past || past.length===0){
-    pastSection.innerHTML = `<div class="col-span-full p-6 bg-white rounded-2xl shadow-md text-center">No recent birthdays</div>`;
-} else { past.forEach(p=> pastSection.appendChild(makeCard(p, refDate))); }
+    const today = (json.today || []).map(p => ({ ...p }));
+    const upcoming = (json.upcoming || []).map(p => ({ ...p }));
+    const past = (json.past || []).map(p => ({ ...p }));
 
-todayCount.textContent = `${today.length} listed`;
-upcomingCount.textContent = `${upcoming.length} listed`;
-pastCount.textContent = `${past.length} listed`;
+    // CLEAR UI
+    todaySection.innerHTML = '';
+    upcomingSection.innerHTML = '';
+    pastSection.innerHTML = '';
 
-// Filters
-const searchInput = qs('#searchInput');
-const monthFilter = qs('#monthFilter');
+    // TODAY
+    if (today.length === 0) {
+        todaySection.innerHTML =
+          `<div class="col-span-full p-8 bg-white rounded-2xl shadow-md text-center">No birthdays today 🕊️</div>`;
+    } else {
+        today.forEach(p => todaySection.appendChild(makeCard(p, refDate)));
+        setTimeout(() => window.confetti && confetti({ particleCount: 150, spread: 70 }), 400);
+    }
 
-function applyFilters(){
-    const q = searchInput.value.trim().toLowerCase();
-    const m = monthFilter.value;
+    // UPCOMING
+    if (upcoming.length === 0) {
+        upcomingSection.innerHTML =
+          `<div class="col-span-full p-6 bg-white rounded-2xl shadow-md text-center">No upcoming birthdays found</div>`;
+    } else {
+        upcoming.forEach(p => upcomingSection.appendChild(makeCard(p, refDate)));
+    }
 
-    const allNodes = Array.from(document.querySelectorAll('.card'))
-        .map(n=>({
-            el:n,
-            name:n.querySelector('.name').textContent.toLowerCase(),
-            bday:n.querySelector('.birthday').textContent
-        }));
+    // PAST
+    if (past.length === 0) {
+        pastSection.innerHTML =
+          `<div class="col-span-full p-6 bg-white rounded-2xl shadow-md text-center">No recent birthdays</div>`;
+    } else {
+        past.forEach(p => pastSection.appendChild(makeCard(p, refDate)));
+    }
 
-    allNodes.forEach(item=>{
-        let show = true;
+    todayCount.textContent = `${today.length} listed`;
+    upcomingCount.textContent = `${upcoming.length} listed`;
+    pastCount.textContent = `${past.length} listed`;
 
-        if(q && !item.name.includes(q)) show = false;
+    // FILTERS
+    const searchInput = document.getElementById("searchInput");
+    const monthFilter = document.getElementById("monthFilter");
 
-        if(m !== 'all' && m!==''){
-            const mon = item.bday ? new Date(item.bday + ' 2000').getMonth()+1 : null;
-            if(mon !== null && String(mon) !== String(m)) show = false;
-        }
+    function applyFilters() {
+        const q = searchInput.value.trim().toLowerCase();
+        const m = monthFilter.value;
 
-        item.el.style.display = show ? '' : 'none';
-    });
-}
+        document.querySelectorAll('.card').forEach(card => {
+            const name = card.querySelector('.name').textContent.toLowerCase();
+            const dateText = card.querySelector('.birthday').textContent;
 
-searchInput.addEventListener('input', applyFilters);
-monthFilter.addEventListener('change', applyFilters);
+            let show = true;
 
-loading.classList.add('hidden');
-content.classList.remove('hidden');
+            if (q && !name.includes(q)) show = false;
 
-gsap.from('.card',{opacity:0,y:10,stagger:0.06,duration:0.5});
+            if (m !== "all") {
+                const month = new Date(dateText + " 2000").getMonth() + 1;
+                if (String(month) !== m) show = false;
+            }
 
-}
-catch(err){
+            card.style.display = show ? "" : "none";
+        });
+    }
+
+    searchInput.addEventListener("input", applyFilters);
+    monthFilter.addEventListener("change", applyFilters);
+
+    loading.classList.add("hidden");
+    content.classList.remove("hidden");
+
+    gsap.from(".card", { opacity: 0, y: 10, stagger: 0.06, duration: 0.5 });
+
+} catch (err) {
     console.error(err);
-    loading.classList.add('hidden');
-    errorBox.classList.remove('hidden');
-    qs('#errorMsg').textContent = 'Could not load birthdays. ' + (err.message || '');
+    loading.classList.add("hidden");
+    errorBox.classList.remove("hidden");
+    document.getElementById("errorMsg").textContent = "Could not load birthdays: " + err.message;
+}
 }
 
-}
-
-init();     // CALL INIT()
+init();
