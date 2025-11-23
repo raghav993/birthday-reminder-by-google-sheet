@@ -1,3 +1,44 @@
+
+function makeCard(person, refDate) {
+    const template = document.getElementById("cardTemplate");
+    const card = template.content.cloneNode(true);
+
+    const img = card.querySelector(".avatar");
+    const name = card.querySelector(".name");
+    const birthday = card.querySelector(".birthday");
+    const age = card.querySelector(".age");
+    const genderBadge = card.querySelector(".genderBadge");
+
+    // SAFE IMAGE LOADING
+    img.onerror = () => {
+        img.src = "https://via.placeholder.com/150?text=No+Image";
+    };
+    img.src = person.ImageURL || "https://via.placeholder.com/150?text=No+Image";
+
+    name.textContent = person.Name;
+
+    const dt = new Date(person.BirthdayRaw);
+    if (!isNaN(dt)) {
+        birthday.textContent = dt.toLocaleDateString();
+        age.textContent = "Age: " + (refDate.getFullYear() - dt.getFullYear());
+    }
+
+    // GENDER BADGES
+    if (person.Gender?.toLowerCase() === "male") {
+        genderBadge.textContent = "♂";
+        genderBadge.classList.add("genderMale");
+    } else if (person.Gender?.toLowerCase() === "female") {
+        genderBadge.textContent = "♀";
+        genderBadge.classList.add("genderFemale");
+    } else {
+        genderBadge.textContent = "⚧";
+        genderBadge.classList.add("genderOther");
+    }
+
+    return card;
+}
+
+
 async function init() {
 try {
 
