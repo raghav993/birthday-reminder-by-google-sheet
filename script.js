@@ -1,5 +1,6 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbxKwqjlJICYruS2_-AmXPyc7KySf5-adijLNEl4U7Xlst9eaOKqI0uHfLu4aY0nizWb7Q/exec";
-const qs = s => document.querySelector(s);
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbzyyt9WF_N0mFmUr87HEjjYL5ay8x3IKse8LFHMYmshJq0dagvPLGOGglS715gqjJRQyQ/exec";
+const qs = (s) => document.querySelector(s);
 
 function parseDOB(s) {
   if (!s) return null;
@@ -13,36 +14,126 @@ function parseDOB(s) {
 }
 
 function prettyDate(d) {
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 function dayName(d) {
   return d.toLocaleDateString("en-IN", { weekday: "long" });
 }
 
+// to save images in Cloudinary
+const CLOUD_NAME = "di7sf5sz7";
+const UPLOAD_PRESET = "birthday_unsigned";
+const CLOUD_FOLDER = "birthday_images";
+
+async function uploadToCloudinary(file) {
+  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+
+  const form = new FormData();
+  form.append("file", file);
+  form.append("upload_preset", UPLOAD_PRESET);
+  form.append("folder", CLOUD_FOLDER);
+
+  const response = await fetch(url, {
+    method: "POST",
+    body: form,
+  });
+
+  const data = await response.json();
+  console.log("Cloudinary Upload:", data);
+
+  return data.secure_url; // Final hosted image URL
+}
+
 async function saveDOB() {
   const modal = qs("#birthdayModal");
+
   const Name = qs("#newName").value.trim();
   const Email = qs("#newEmail").value.trim();
   const Birthday = qs("#newDOB").value;
-  const ImageURL = qs("#newImage").value.trim();
-  const Gender = qs("#newGender")?.value || "";
+  const Gender = qs("#newGender").value;
+  const ImageURL_Input = qs("#newImage").value.trim();
+  const FileInput = qs("#uploadFile")?.files[0];
 
   if (!Name || !Email || !Birthday) {
-    alert("⚠ Please fill Name, Email, DOB");
+    alert("⚠ Please fill Name, Email & DOB");
     return;
   }
+
+  let finalImageURL = ImageURL_Input;
+
+  // If file selected → upload to Cloudinary
+  if (FileInput) {
+    finalImageURL = await uploadToCloudinary(FileInput);
+  }
+
+  const payload = {
+    action: "add",
+    Name,
+    Email,
+    Birthday,
+    Gender,
+    ImageURL: finalImageURL
+  };
 
   await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "add", Name, Email, Birthday, ImageURL, Gender })
+    body: JSON.stringify(payload)
   });
 
-  alert("✅ Birthday Saved!");
+  alert("🎉 Birthday Saved!");
   modal.classList.add("hidden");
   window.location.reload();
 }
+
+// async function saveDOB() {
+//   const modal = qs("#birthdayModal");
+
+//   const Name = qs("#newName").value.trim();
+//   const Email = qs("#newEmail").value.trim();
+//   const Birthday = qs("#newDOB").value;
+//   const ImageURL = qs("#newImage").value.trim();
+//   const Gender = qs("#newGender")?.value || "";
+
+//   if (!Name || !Email || !Birthday) {
+//     alert("⚠ Please fill Name, Email, DOB");
+//     return;
+//   }
+
+//   const payload = {
+//     action: "add",
+//     Name,
+//     Email,
+//     Birthday,
+//     ImageURL,
+//     Gender
+//   };
+
+//   try {
+//     const resp = await fetch(API_URL, {
+//       method: "POST",
+//       body: JSON.stringify(payload)   // ❌ no headers → no CORS issue
+//     });
+
+//     const result = await resp.json();
+//     console.log(result);
+
+//     if (result.success) {
+//       alert("🎉 Birthday Saved Successfully!");
+//       modal.classList.add("hidden");
+//       window.location.reload();
+//     } else {
+//       alert("❌ Error: " + result.message);
+//     }
+//   } catch (err) {
+//     alert("❌ Network error: " + err.message);
+//   }
+// }
 
 function makeCard(person, refDate) {
   const dt = parseDOB(person.BirthdayRaw || "");
@@ -51,16 +142,23 @@ function makeCard(person, refDate) {
   if (dt) card.dataset.date = dt.toISOString();
 
   card.innerHTML = `
-    <img class="card-img" src="${person.ImageURL || ''}" alt="avatar"/>
+    <img class="card-img" src="${person.ImageURL || ""}" alt="avatar"/>
     <div class="card-info">
       <div class="card-name">${person.Name}</div>
-      <div class="card-date">${dt ? `🎂 ${prettyDate(dt)} (${dayName(dt)})` : 'DOB unknown'}</div>
-      <div class="card-age">${dt ? `Turning ${refDate.getFullYear() - dt.getFullYear()}` : '--'}</div>
+      <div class="card-date">${
+        dt ? `🎂 ${prettyDate(dt)} (${dayName(dt)})` : "DOB unknown"
+      }</div>
+      <div class="card-age">${
+        dt ? `Turning ${refDate.getFullYear() - dt.getFullYear()}` : "--"
+      }</div>
     </div>
   `;
 
   const img = card.querySelector(".card-img");
-  img.onerror = () => img.src = `https://randomuser.me/api/portraits/lego/${Math.floor(Math.random()*10+1)}.jpg`;
+  img.onerror = () =>
+    (img.src = `https://randomuser.me/api/portraits/lego/${Math.floor(
+      Math.random() * 10 + 1
+    )}.jpg`);
 
   card.onclick = () => openPopup(person, dt);
   return card;
@@ -93,9 +191,9 @@ async function init() {
     if (gp) gp.innerHTML = "";
 
     const add = (el, p) => el.appendChild(makeCard(p, refDate));
-    if (gt) today.forEach(p => add(gt, p));
-    if (gu) upcoming.forEach(p => add(gu, p));
-    if (gp) past.forEach(p => add(gp, p));
+    if (gt) today.forEach((p) => add(gt, p));
+    if (gu) upcoming.forEach((p) => add(gu, p));
+    if (gp) past.forEach((p) => add(gp, p));
 
     // ✅ Today Banner Large Frame Logic
     if (today.length > 0) {
@@ -108,13 +206,19 @@ async function init() {
       todayBanner.classList.remove("hidden");
       qs("#dynamicTodayImg").src = p.ImageURL || "";
       qs("#dynamicTodayImg").onerror = () => {
-        qs("#dynamicTodayImg").src = `https://randomuser.me/api/portraits/lego/${Math.floor(Math.random()*10+1)}.jpg`;
+        qs(
+          "#dynamicTodayImg"
+        ).src = `https://randomuser.me/api/portraits/lego/${Math.floor(
+          Math.random() * 10 + 1
+        )}.jpg`;
       };
 
       qs("#dynamicTodayName").textContent = `🎉 Happy Birthday, ${p.Name}! 🎉`;
       qs("#dynamicTodayDate").textContent = `📅 ${pretty}`;
       qs("#dynamicTodayDay").textContent = `🎁 ${day}`;
-      qs("#todayCount").textContent = `🎂 ${today.length} birthdays today (Age ${ageNumber})`;
+      qs(
+        "#todayCount"
+      ).textContent = `🎂 ${today.length} birthdays today (Age ${ageNumber})`;
 
       setTimeout(() => confetti({ particleCount: 120, spread: 80 }), 400);
     } else {
@@ -126,7 +230,6 @@ async function init() {
 
     loading.classList.add("hidden");
     content.classList.remove("hidden");
-
   } catch (err) {
     console.error("Load error:", err);
     loading.classList.add("hidden");
@@ -137,18 +240,18 @@ async function init() {
 
 // ✅ SEARCH + MONTH FILTER
 function applyFilters() {
-  const q = qs('#searchInput').value.trim().toLowerCase();
-  const m = qs('#monthFilter').value;
+  const q = qs("#searchInput").value.trim().toLowerCase();
+  const m = qs("#monthFilter").value;
 
-  document.querySelectorAll('.card-item').forEach(card => {
-    const name = card.querySelector('.card-name').textContent.toLowerCase();
+  document.querySelectorAll(".card-item").forEach((card) => {
+    const name = card.querySelector(".card-name").textContent.toLowerCase();
     const dt = new Date(card.dataset.date);
     let show = true;
     if (q && !name.includes(q)) show = false;
-    if (m !== 'all' && !isNaN(dt)) {
-      if (String(dt.getMonth()+1) !== m) show = false;
+    if (m !== "all" && !isNaN(dt)) {
+      if (String(dt.getMonth() + 1) !== m) show = false;
     }
-    card.style.display = show ? '' : 'none';
+    card.style.display = show ? "" : "none";
   });
 }
 
@@ -159,14 +262,14 @@ function setupModal() {
   qs("#saveBirthdayBtn").onclick = saveDOB;
 }
 // ✅ DARK MODE TOGGLE
-qs('#themeToggle').onclick = () => {
-  document.body.classList.toggle('theme-dark');
+qs("#themeToggle").onclick = () => {
+  document.body.classList.toggle("theme-dark");
 };
 
 window.onload = () => {
   init();
-  qs('#searchInput').oninput = applyFilters;
-  qs('#monthFilter').onchange = applyFilters;
+  qs("#searchInput").oninput = applyFilters;
+  qs("#monthFilter").onchange = applyFilters;
   setupModal();
 };
 
@@ -180,14 +283,18 @@ function openPopup(person, dt) {
   const age = qs("#detailAge");
 
   popup.classList.add("show");
-  popup.style.display="flex";
+  popup.style.display = "flex";
 
   img.src = person.ImageURL;
   name.textContent = person.Name;
 
-  if(dt && !isNaN(dt)){
-    dateEl.textContent = dt.toLocaleDateString("en-IN",{month:"long",day:"2-digit",year:"numeric"});
-    dayEl.textContent = dt.toLocaleDateString("en-IN",{weekday:"long"});
+  if (dt && !isNaN(dt)) {
+    dateEl.textContent = dt.toLocaleDateString("en-IN", {
+      month: "long",
+      day: "2-digit",
+      year: "numeric",
+    });
+    dayEl.textContent = dt.toLocaleDateString("en-IN", { weekday: "long" });
     age.textContent = new Date().getFullYear() - dt.getFullYear();
   } else {
     dateEl.textContent = person.Birthday;
@@ -196,10 +303,10 @@ function openPopup(person, dt) {
   }
 }
 
-document.addEventListener("DOMContentLoaded",()=>{
-  const popup=document.getElementById("detailPopup");
-  document.getElementById("popupCloseBtn")?.addEventListener("click",()=>{
+document.addEventListener("DOMContentLoaded", () => {
+  const popup = document.getElementById("detailPopup");
+  document.getElementById("popupCloseBtn")?.addEventListener("click", () => {
     popup.classList.remove("show");
-    popup.style.display="none";
+    popup.style.display = "none";
   });
 });

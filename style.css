@@ -496,3 +496,126 @@ button:hover {
     transform: scale(1);
   }
 }
+
+/* BEAUTIFUL GLASS MODAL */
+.fancyModal {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 24px;
+  padding: 22px;
+  width: 95%;
+  max-width: 380px;
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.2);
+  animation: scaleIn 0.25s ease-out;
+}
+
+/* Dark mode support */
+.theme-dark .fancyModal {
+  background: rgba(30, 30, 30, 0.55);
+  border-color: rgba(255,255,255,0.07);
+}
+
+/* Modal Title */
+.modalTitle {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* Fields */
+.field {
+  margin-bottom: 14px;
+}
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+.field input {
+  width: 90%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  margin-top: 4px;
+  background: var(--card);
+  color: var(--text);
+}
+.field select {
+  width: 97%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  margin-top: 4px;
+  background: var(--card);
+  color: var(--text);
+}
+.theme-dark .field input,
+.theme-dark .field select {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+/* Separator */
+.separator {
+  text-align: center;
+  margin: 12px 0;
+  font-weight: 600;
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+/* Upload Box */
+.uploadBox {
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(0,0,0,0.07);
+  border-radius: 14px;
+  text-align: center;
+  border: 1px dashed #999;
+}
+.uploadBox input {
+  margin-top: 6px;
+}
+
+/* Image Preview */
+.preview {
+  margin-top: 14px;
+  text-align: center;
+}
+.preview img {
+  width: 110px;
+  height: 110px;
+  border-radius: 15px;
+  object-fit: cover;
+  border: 3px solid var(--accent);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+
+/* Buttons */
+.btnPrimary {
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+}
+.btnCancel {
+  background: #e53935;
+  color: white;
+  font-weight: 700;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+}
+
+/* Animation */
+@keyframes scaleIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

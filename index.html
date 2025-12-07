@@ -124,29 +124,62 @@
     </div>
   </template>
 
-  <!-- ADD DOB MODAL ✅ single one -->
+  <!-- ADD BIRTHDAY MODAL (NEW BEAUTIFUL UI ❤️) -->
   <div id="birthdayModal" class="modal hidden">
-    <div class="modalBox">
-      <h3 class="font-bold mb-3">Add Birthday 🎉</h3>
+    <div class="modalBox fancyModal">
 
-      <input id="newName" placeholder="Name" required />
-      <input id="newEmail" placeholder="Email" required />
-      <input id="newDOB" type="date" required />
+      <h3 class="modalTitle">🎉 Add New Birthday</h3>
 
-      <select id="newGender" class="w-full px-3 py-2 rounded-lg border">
-        <option value="male">♂ Male</option>
-        <option value="female">♀ Female</option>
-        <option value="other">⚧ Other</option>
-      </select>
+      <div class="field">
+        <label>Name</label>
+        <input class="form-control" id="newName" placeholder="Enter full name" required />
+      </div>
 
-      <input id="newImage" placeholder="Direct Image URL (optional)" />
+      <div class="field">
+        <label>Email</label>
+        <input class="form-control" id="newEmail" type="email" placeholder="Enter email" required />
+      </div>
+
+      <div class="field">
+        <label>Date of Birth</label>
+        <input class="form-control" id="newDOB" type="date" required />
+      </div>
+
+      <div class="field">
+        <label>Gender</label>
+        <select class="form-control" id="newGender">
+          <option value="male">♂ Male</option>
+          <option value="female">♀ Female</option>
+          <option value="other">⚧ Other</option>
+        </select>
+      </div>
+
+      <div class="separator">Image Options</div>
+
+      <div class="field">
+        <label>Image URL (optional)</label>
+        <input class="form-control" id="newImage" placeholder="Paste image URL" />
+      </div>
+
+      <div class="uploadBox">
+        <span>OR Upload Image</span>
+        <input id="uploadFile" type="file" accept="image/*" />
+      </div>
+
+      <div class="preview hidden" id="imagePreviewBox">
+        <img id="imagePreview" />
+        <p>Preview</p>
+      </div>
 
       <div class="grid2 mt-4">
-        <button id="saveBirthdayBtn">💾 Save</button>
-        <button id="closeModalBtn">✖ Cancel</button>
+        <button id="saveBirthdayBtn" class="btnPrimary">💾 Save</button>
+        <button id="closeModalBtn" class="btnCancel">✖ Cancel</button>
       </div>
+
     </div>
   </div>
+
+
 
   <div id="detailPopup">
     <div id="popupBox">
