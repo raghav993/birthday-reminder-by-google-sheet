@@ -1,7 +1,7 @@
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbzyyt9WF_N0mFmUr87HEjjYL5ay8x3IKse8LFHMYmshJq0dagvPLGOGglS715gqjJRQyQ/exec";
-const qs = (s) => document.querySelector(s);
+  "https://script.google.com/macros/s/AKfycbwIsWvWZHlR07GqbjJPxH_sEIB3LJJRXZA2CKJjhYksFlqd_UbG5jEzeQo4dC2sM-poOQ/exec";
 
+const qs = (s) => document.querySelector(s);
 function parseDOB(s) {
   if (!s) return null;
   s = String(s).trim();
@@ -12,7 +12,6 @@ function parseDOB(s) {
   const d = new Date(s);
   return isNaN(d) ? null : d;
 }
-
 function prettyDate(d) {
   return d.toLocaleDateString("en-IN", {
     day: "numeric",
@@ -25,50 +24,18 @@ function dayName(d) {
   return d.toLocaleDateString("en-IN", { weekday: "long" });
 }
 
-// to save images in Cloudinary
-const CLOUD_NAME = "di7sf5sz7";
-const UPLOAD_PRESET = "birthday_unsigned";
-const CLOUD_FOLDER = "birthday_images";
-
-async function uploadToCloudinary(file) {
-  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-
-  const form = new FormData();
-  form.append("file", file);
-  form.append("upload_preset", UPLOAD_PRESET);
-  form.append("folder", CLOUD_FOLDER);
-
-  const response = await fetch(url, {
-    method: "POST",
-    body: form,
-  });
-
-  const data = await response.json();
-  console.log("Cloudinary Upload:", data);
-
-  return data.secure_url; // Final hosted image URL
-}
-
 async function saveDOB() {
   const modal = qs("#birthdayModal");
-
+  
   const Name = qs("#newName").value.trim();
   const Email = qs("#newEmail").value.trim();
   const Birthday = qs("#newDOB").value;
-  const Gender = qs("#newGender").value;
-  const ImageURL_Input = qs("#newImage").value.trim();
-  const FileInput = qs("#uploadFile")?.files[0];
+  const ImageURL = qs("#newImage").value.trim();
+  const Gender = qs("#newGender")?.value || "";
 
   if (!Name || !Email || !Birthday) {
-    alert("⚠ Please fill Name, Email & DOB");
+    alert("⚠ Please fill Name, Email, DOB");
     return;
-  }
-
-  let finalImageURL = ImageURL_Input;
-
-  // If file selected → upload to Cloudinary
-  if (FileInput) {
-    finalImageURL = await uploadToCloudinary(FileInput);
   }
 
   const payload = {
@@ -76,19 +43,29 @@ async function saveDOB() {
     Name,
     Email,
     Birthday,
-    Gender,
-    ImageURL: finalImageURL
+    ImageURL,
+    Gender
   };
 
-  await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)   // ❌ no headers → no CORS issue
+    });
 
-  alert("🎉 Birthday Saved!");
-  modal.classList.add("hidden");
-  window.location.reload();
+    const result = await resp.json();
+    console.log(result);
+
+    if (result.success) {
+      alert("🎉 Birthday Saved Successfully!");
+      modal.classList.add("hidden");
+      window.location.reload();
+    } else {
+      alert("❌ Error: " + result.message);
+    }
+  } catch (err) {
+    alert("❌ Network error: " + err.message);
+  }
 }
 
 // async function saveDOB() {
